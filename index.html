@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>존2 심박수 계산기</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .container { background: white; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    h1 { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+    .label { font-size: 13px; color: #666; margin-bottom: 6px; }
+    .method-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .toggle-btn { flex: 1; padding: 9px; font-size: 13px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; color: #666; cursor: pointer; position: relative; transition: all 0.15s; }
+    .toggle-btn.active { border-color: #1D9E75; background: #E1F5EE; color: #0F6E56; font-weight: 600; }
+    .tooltip-wrap { position: relative; flex: 1; }
+    .tooltip-box { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #555; line-height: 1.6; width: 200px; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .tooltip-wrap:hover .tooltip-box { display: block; }
+    .tooltip-arrow { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) rotate(45deg); width: 8px; height: 8px; background: white; border-right: 1px solid #ddd; border-bottom: 1px solid #ddd; }
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    input[type=number] { width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; background: white; color: #111; }
+    input[type=number]:focus { outline: none; border-color: #1D9E75; }
+    .highlight { background: #E1F5EE; border: 1.5px solid #1D9E75; border-radius: 12px; padding: 1.25rem; margin-bottom: 12px; }
+    .z2-label { font-size: 13px; color: #0F6E56; margin-bottom: 4px; }
+    .z2-num { font-size: 28px; font-weight: 700; color: #0F6E56; }
+    .z2-sub { font-size: 12px; color: #1D9E75; margin-top: 2px; }
+    .card { background: white; border: 1px solid #eee; border-radius: 12px; padding: 1.25rem; margin-bottom: 12px; }
+    .zone-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f0f0f0; }
+    .zone-row:last-child { border-bottom: none; }
+    .zone-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .zone-name { flex: 1; font-size: 14px; color: #333; }
+    .zone-val { font-size: 14px; font-weight: 600; color: #333; }
+    .info-card { background: #f9f9f9; border-radius: 12px; padding: 1rem 1.25rem; font-size: 13px; color: #888; }
+    .info-card strong { color: #555; }
+    #result { display: none; }
+    #empty-state { text-align: center; padding: 2rem 0; font-size: 14px; color: #aaa; }
+    .credit { text-align: center; font-size: 12px; color: #bbb; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>존2 심박수 계산기</h1>
+  <p class="subtitle">내 존2 구간을 확인해보세요</p>
+
+  <div class="label">계산 방식</div>
+  <div class="method-toggle">
+    <div class="tooltip-wrap">
+      <button class="toggle-btn active" id="btn-simple" onclick="setMethod('simple')">기본 방식</button>
+      <div class="tooltip-box">
+        나이만 입력하면 바로 계산돼요.<br>공식: <strong>220 - 나이</strong> × 60~70%<br><br>빠르고 간단하지만 개인 체력 차이는 반영 안 돼요.
+        <div class="tooltip-arrow"></div>
+      </div>
+    </div>
+    <div class="tooltip-wrap">
+      <button class="toggle-btn" id="btn-karvonen" onclick="setMethod('karvonen')">카르보넨 공식</button>
+      <div class="tooltip-box">
+        안정시 심박수까지 반영한 더 정밀한 계산법이에요.<br>공식: <strong>(최대HR - 안정시HR) × 강도 + 안정시HR</strong><br><br>꾸준히 운동한 사람일수록 더 정확해요.
+        <div class="tooltip-arrow"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-grid">
+    <div>
+      <div class="label">나이</div>
+      <input type="number" id="age" placeholder="예: 30" min="10" max="100" oninput="calc()" />
+    </div>
+    <div id="rhr-wrap" style="display:none;">
+      <div class="label">안정시 심박수 (bpm)</div>
+      <input type="number" id="rhr" placeholder="예: 60" min="30" max="120" oninput="calc()" />
+    </div>
+  </div>
+
+  <div id="result">
+    <div class="highlight">
+      <div class="z2-label">존2 구간</div>
+      <div class="z2-num" id="z2-range">— bpm</div>
+      <div class="z2-sub">최대 심박수의 60~70%</div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:12px;">전체 심박수 구간</div>
+      <div id="zones-list"></div>
+    </div>
+
+    <div class="info-card">
+      <strong>최대 심박수 (HRmax)</strong>: <span id="hrmax-display">—</span><br>
+      <span id="formula-note" style="font-size:12px;">공식: 220 - 나이</span>
+    </div>
+  </div>
+
+  <div id="empty-state">나이를 입력하면 존2 구간이 계산돼요</div>
+  <div class="credit">러닝원스텝 × Claude</div>
+</div>
+
+<script>
+let method = 'simple';
+
+function setMethod(m) {
+  method = m;
+  document.getElementById('btn-simple').className = 'toggle-btn' + (m === 'simple' ? ' active' : '');
+  document.getElementById('btn-karvonen').className = 'toggle-btn' + (m === 'karvonen' ? ' active' : '');
+  document.getElementById('rhr-wrap').style.display = m === 'karvonen' ? 'block' : 'none';
+  calc();
+}
+
+const zones = [
+  { name: '존1 — 회복', pct: [0.50, 0.60], color: '#9FE1CB' },
+  { name: '존2 — 유산소 기초', pct: [0.60, 0.70], color: '#1D9E75', highlight: true },
+  { name: '존3 — 유산소 향상', pct: [0.70, 0.80], color: '#FAC775' },
+  { name: '존4 — 역치', pct: [0.80, 0.90], color: '#F0997B' },
+  { name: '존5 — 최고 강도', pct: [0.90, 1.00], color: '#E24B4A' },
+];
+
+function calc() {
+  const age = parseInt(document.getElementById('age').value);
+  if (!age || age < 10 || age > 100) {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('empty-state').textContent = '나이를 입력하면 존2 구간이 계산돼요';
+    return;
+  }
+
+  const hrmax = 220 - age;
+
+  if (method === 'karvonen') {
+    const rhr = parseInt(document.getElementById('rhr').value);
+    if (!rhr || rhr < 30 || rhr > 120) {
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('empty-state').textContent = '안정시 심박수도 입력해주세요';
+      document.getElementById('empty-state').style.display = 'block';
+      return;
+    }
+    const hrr = hrmax - rhr;
+    document.getElementById('z2-range').textContent = Math.round(hrr * 0.60 + rhr) + ' ~ ' + Math.round(hrr * 0.70 + rhr) + ' bpm';
+    document.getElementById('formula-note').textContent = '공식: (HRmax - 안정시HR) × 강도 + 안정시HR';
+  } else {
+    document.getElementById('z2-range').textContent = Math.round(hrmax * 0.60) + ' ~ ' + Math.round(hrmax * 0.70) + ' bpm';
+    document.getElementById('formula-note').textContent = '공식: 220 - 나이';
+  }
+
+  document.getElementById('hrmax-display').textContent = hrmax + ' bpm';
+
+  const list = document.getElementById('zones-list');
+  list.innerHTML = zones.map(z => {
+    let low, high;
+    if (method === 'karvonen') {
+      const rhr = parseInt(document.getElementById('rhr').value);
+      const hrr = hrmax - rhr;
+      low = Math.round(hrr * z.pct[0] + rhr);
+      high = Math.round(hrr * z.pct[1] + rhr);
+    } else {
+      low = Math.round(hrmax * z.pct[0]);
+      high = Math.round(hrmax * z.pct[1]);
+    }
+    const isZ2 = z.highlight;
+    return `<div class="zone-row" style="${isZ2 ? 'background:#E1F5EE; margin:0 -1.25rem; padding:9px 1.25rem; border-radius:8px;' : ''}">
+      <div class="zone-dot" style="background:${z.color};"></div>
+      <div class="zone-name" style="font-weight:${isZ2 ? '600' : '400'};">${z.name}</div>
+      <div class="zone-val" style="color:${isZ2 ? '#0F6E56' : '#333'};">${low} ~ ${high} bpm</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+}
+</script>
+</body>
+</html>
