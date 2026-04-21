@@ -28,9 +28,9 @@ h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8p
 
 /* 오버레이 */
 .overlay-wrap{position:relative;}
-.overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.45);}
-.overlay.open{display:block;}
-.popup{background:white;border-radius:20px;width:88%;max-width:320px;text-align:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);position:absolute;left:50%;transform:translateX(-50%);}
+.overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.45);overflow-y:auto;}
+.overlay.open{display:flex;align-items:center;justify-content:center;padding:20px 0;}
+.popup{background:white;border-radius:20px;width:88%;max-width:320px;text-align:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);flex-shrink:0;}
 .popup-jp{font-size:100px;line-height:1.05;color:#1a1a1a;padding:24px 16px 8px;}
 .popup-kor{font-size:36px;font-weight:500;color:#0F6E56;padding:0 16px 10px;display:none;}
 .popup-word-area{display:none;padding:0 20px 16px;}
@@ -42,6 +42,7 @@ h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8p
 .pdot{width:8px;height:8px;border-radius:50%;background:#ddd;}
 .pdot.on{background:#1D9E75;}
 .popup-close{font-size:14px;color:#888;padding:12px;cursor:pointer;border-top:1px solid #f0f0ec;}
+.popup-sound{font-size:15px;color:#1D9E75;padding:10px;cursor:pointer;border-top:1px solid #f0f0ec;font-weight:500;}
 
 /* 단어 */
 .wfilter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
@@ -305,6 +306,14 @@ function buildGrid(type){
   });
 }
 
+function speakCurrent(type){
+  const c=currentChar[type];
+  if(!c)return;
+  const s=popupState[type];
+  if(s>=2){const cw=CW[c.j];if(cw)speak(cw.w);}
+  else speak(c.j);
+}
+
 function speak(text){
   if(!window.speechSynthesis)return;
   window.speechSynthesis.cancel();
@@ -319,14 +328,6 @@ function openPopup(type,c,event){
   const ol=document.getElementById(type+'-overlay');
   ol.classList.add('open');
   renderPopup(type);
-  const popup=ol.querySelector('.popup');
-  const winH=window.innerHeight;
-  const popupH=popup.offsetHeight||360;
-  const touchY=event?(event.changedTouches?event.changedTouches[0].clientY:event.clientY):winH/2;
-  let top=touchY-popupH/2;
-  if(top<16)top=16;
-  if(top+popupH>winH-16)top=winH-popupH-16;
-  popup.style.top=top+'px';
   speak(c.j);
 }
 
