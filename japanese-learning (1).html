@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>일본어 히라가나 가타카나 학습</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f8f6;color:#1a1a1a;min-height:100vh;}
+.app{max-width:480px;margin:0 auto;padding:16px 12px 40px;}
+h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8px;}
+.subtitle{font-size:12px;color:#888;margin-bottom:16px;}
+.tabs{display:flex;gap:6px;margin-bottom:16px;}
+.tab{flex:1;padding:12px 4px;border-radius:8px;border:1px solid #e0e0da;background:white;color:#888;cursor:pointer;font-size:14px;text-align:center;font-family:inherit;}
+.tab.active{background:#f0f0ec;color:#1a1a1a;font-weight:500;border-color:#ccc;}
+.sec{display:none;}.sec.active{display:block;}
+.sec-title{font-size:16px;font-weight:500;color:#1a1a1a;margin-bottom:3px;}
+.sec-hint{font-size:12px;color:#888;margin-bottom:10px;}
+.prog-bg{background:#e8e8e4;border-radius:6px;height:6px;margin-bottom:14px;}
+.prog-bar{background:#1D9E75;height:6px;border-radius:6px;transition:width .3s;}
+.row-label{font-size:12px;color:#888;margin:14px 0 6px;padding-left:2px;}
+.row-label.taku{color:#854F0B;}
+.cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:2px;}
+.ccard{background:white;border:1px solid #e8e8e4;border-radius:8px;padding:14px 4px;text-align:center;cursor:pointer;user-select:none;min-height:60px;display:flex;align-items:center;justify-content:center;transition:background .1s;}
+.ccard:active{background:#f0f0ec;}
+.ccard.taku{border-color:#FAC775;}
+.ccard .jp{font-size:28px;color:#1a1a1a;line-height:1;}
+
+/* 오버레이 */
+.overlay-wrap{position:relative;}
+.overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.45);}
+.overlay.open{display:block;}
+.popup{background:white;border-radius:20px;width:88%;max-width:320px;text-align:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);position:absolute;left:50%;transform:translateX(-50%);}
+.popup-jp{font-size:100px;line-height:1.05;color:#1a1a1a;padding:24px 16px 8px;}
+.popup-kor{font-size:36px;font-weight:500;color:#0F6E56;padding:0 16px 10px;display:none;}
+.popup-word-area{display:none;padding:0 20px 16px;}
+.popup-word{font-size:24px;color:#1a1a1a;margin-bottom:4px;}
+.popup-word-sub{font-size:15px;color:#888;}
+.popup-word-mean{font-size:18px;color:#0F6E56;font-weight:500;margin-top:5px;}
+.popup-hint{font-size:12px;color:#aaa;padding:6px 16px 10px;min-height:32px;}
+.popup-steps{display:flex;gap:7px;justify-content:center;padding-bottom:10px;}
+.pdot{width:8px;height:8px;border-radius:50%;background:#ddd;}
+.pdot.on{background:#1D9E75;}
+.popup-close{font-size:14px;color:#888;padding:12px;cursor:pointer;border-top:1px solid #f0f0ec;}
+
+/* 단어 */
+.wfilter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.wfilter button{padding:8px 12px;border-radius:8px;border:1px solid #e0e0da;background:white;cursor:pointer;font-size:13px;color:#888;font-family:inherit;}
+.wfilter button.active{background:#f0f0ec;color:#1a1a1a;font-weight:500;}
+.wgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.wcard{background:white;border:1px solid #e8e8e4;border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;user-select:none;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .15s;}
+.wcard:active{background:#f5f5f2;}
+.wcard.revealed{background:#E1F5EE;border-color:#1D9E75;}
+.wcard .wjp{font-size:26px;color:#1a1a1a;line-height:1.2;}
+.wcard .wrev{display:none;margin-top:6px;}
+.wcard .wkor{font-size:14px;color:#0F6E56;font-weight:500;}
+.wcard .wmean{font-size:13px;color:#888;margin-top:2px;}
+.wcard .wtype{font-size:11px;color:#bbb;margin-top:5px;}
+
+/* 퀴즈 */
+.qmode{display:flex;gap:6px;margin-bottom:14px;}
+.qmode button{flex:1;padding:11px 4px;border-radius:8px;border:1px solid #e0e0da;background:white;cursor:pointer;font-size:13px;color:#888;font-family:inherit;}
+.qmode button.active{background:#f0f0ec;color:#1a1a1a;font-weight:500;}
+.quiz-score{font-size:13px;color:#888;margin-bottom:8px;}
+.quiz-q{font-size:88px;text-align:center;padding:28px 16px;background:#f0f0ec;border-radius:16px;margin-bottom:14px;color:#1a1a1a;line-height:1;}
+.qchoices{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+.qchoice{padding:18px 8px;font-size:22px;text-align:center;border-radius:10px;border:1px solid #e0e0da;cursor:pointer;background:white;color:#1a1a1a;font-family:inherit;transition:all .1s;}
+.qchoice:active{background:#f0f0ec;}
+.qchoice.correct{background:#E1F5EE;border-color:#1D9E75;color:#0F6E56;}
+.qchoice.wrong{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D;}
+.qresult{font-size:16px;margin-bottom:10px;min-height:24px;text-align:center;}
+.qnext{padding:15px;width:100%;border-radius:10px;border:1px solid #e0e0da;background:white;cursor:pointer;font-size:17px;color:#1a1a1a;font-family:inherit;}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>일본어 문자 학습</h1>
+  <p class="subtitle">히라가나 · 가타카나 · 단어 · 퀴즈</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showSec('hira',this)">히라가나</button>
+    <button class="tab" onclick="showSec('kata',this)">가타카나</button>
+    <button class="tab" onclick="showSec('words',this)">단어</button>
+    <button class="tab" onclick="showSec('quiz',this)">퀴즈</button>
+  </div>
+
+  <div id="hira" class="sec active">
+    <p class="sec-title">히라가나 (平仮名)</p>
+    <p class="sec-hint">터치 → 발음 → 단어</p>
+    <div class="prog-bg"><div class="prog-bar" id="hprog" style="width:0%"></div></div>
+    <div class="overlay-wrap" id="hira-wrap">
+      <div class="overlay" id="hira-overlay" onclick="if(event.target===this)closeOverlay('hira')">
+        <div class="popup" onclick="overlayTap('hira',event)">
+          <div class="popup-jp" id="h-pjp"></div>
+          <div class="popup-kor" id="h-pkor"></div>
+          <div class="popup-word-area" id="h-pword">
+            <div class="popup-word" id="h-pw"></div>
+            <div class="popup-word-sub" id="h-pwsub"></div>
+            <div class="popup-word-mean" id="h-pwmean"></div>
+          </div>
+          <div class="popup-hint" id="h-phint"></div>
+          <div class="popup-steps"><span class="pdot" id="hd0"></span><span class="pdot" id="hd1"></span><span class="pdot" id="hd2"></span></div>
+          <div class="popup-close" onclick="closeOverlay('hira')">닫기</div>
+        </div>
+      </div>
+      <div id="hira-grid"></div>
+    </div>
+  </div>
+
+  <div id="kata" class="sec">
+    <p class="sec-title">가타카나 (片仮名)</p>
+    <p class="sec-hint">터치 → 발음 → 단어</p>
+    <div class="prog-bg"><div class="prog-bar" id="kprog" style="width:0%"></div></div>
+    <div class="overlay-wrap" id="kata-wrap">
+      <div class="overlay" id="kata-overlay" onclick="if(event.target===this)closeOverlay('kata')">
+        <div class="popup" onclick="overlayTap('kata',event)">
+          <div class="popup-jp" id="k-pjp"></div>
+          <div class="popup-kor" id="k-pkor"></div>
+          <div class="popup-word-area" id="k-pword">
+            <div class="popup-word" id="k-pw"></div>
+            <div class="popup-word-sub" id="k-pwsub"></div>
+            <div class="popup-word-mean" id="k-pwmean"></div>
+          </div>
+          <div class="popup-hint" id="k-phint"></div>
+          <div class="popup-steps"><span class="pdot" id="kd0"></span><span class="pdot" id="kd1"></span><span class="pdot" id="kd2"></span></div>
+          <div class="popup-close" onclick="closeOverlay('kata')">닫기</div>
+        </div>
+      </div>
+      <div id="kata-grid"></div>
+    </div>
+  </div>
+
+  <div id="words" class="sec">
+    <p class="sec-title">단어 익히기</p>
+    <p class="sec-hint">터치하면 읽는 법과 뜻이 보여요</p>
+    <div class="wfilter">
+      <button class="active" onclick="filterW('all',this)">전체</button>
+      <button onclick="filterW('hira',this)">히라가나</button>
+      <button onclick="filterW('kata',this)">가타카나</button>
+      <button onclick="filterW('food',this)">음식</button>
+      <button onclick="filterW('nature',this)">자연</button>
+      <button onclick="filterW('daily',this)">일상</button>
+    </div>
+    <div class="wgrid" id="wgrid"></div>
+  </div>
+
+  <div id="quiz" class="sec">
+    <p class="sec-title">퀴즈</p>
+    <div class="qmode">
+      <button id="qm-hira" class="active" onclick="setQM('hira')">히라가나</button>
+      <button id="qm-kata" onclick="setQM('kata')">가타카나</button>
+      <button id="qm-both" onclick="setQM('both')">둘 다</button>
+    </div>
+    <div class="quiz-score" id="qscore">점수: 0 / 0</div>
+    <div class="quiz-q" id="qq"></div>
+    <div class="qchoices" id="qchoices"></div>
+    <div class="qresult" id="qresult"></div>
+    <button class="qnext" id="qnext" onclick="nextQ()" style="display:none">다음 →</button>
+  </div>
+</div>
+
+<script>
+const HR=[
+  {r:'아행',chars:[{j:'あ',k:'아'},{j:'い',k:'이'},{j:'う',k:'우'},{j:'え',k:'에'},{j:'お',k:'오'}]},
+  {r:'카행',chars:[{j:'か',k:'카'},{j:'き',k:'키'},{j:'く',k:'쿠'},{j:'け',k:'케'},{j:'こ',k:'코'}]},
+  {r:'사행',chars:[{j:'さ',k:'사'},{j:'し',k:'시'},{j:'す',k:'스'},{j:'せ',k:'세'},{j:'そ',k:'소'}]},
+  {r:'타행',chars:[{j:'た',k:'타'},{j:'ち',k:'치'},{j:'つ',k:'츠'},{j:'て',k:'테'},{j:'と',k:'토'}]},
+  {r:'나행',chars:[{j:'な',k:'나'},{j:'に',k:'니'},{j:'ぬ',k:'누'},{j:'ね',k:'네'},{j:'の',k:'노'}]},
+  {r:'하행',chars:[{j:'は',k:'하'},{j:'ひ',k:'히'},{j:'ふ',k:'후'},{j:'へ',k:'헤'},{j:'ほ',k:'호'}]},
+  {r:'마행',chars:[{j:'ま',k:'마'},{j:'み',k:'미'},{j:'む',k:'무'},{j:'め',k:'메'},{j:'も',k:'모'}]},
+  {r:'야행',chars:[{j:'や',k:'야'},{j:'ゆ',k:'유'},{j:'よ',k:'요'}]},
+  {r:'라행',chars:[{j:'ら',k:'라'},{j:'り',k:'리'},{j:'る',k:'루'},{j:'れ',k:'레'},{j:'ろ',k:'로'}]},
+  {r:'와행',chars:[{j:'わ',k:'와'},{j:'を',k:'오'},{j:'ん',k:'응'}]},
+  {r:'탁음 が행',taku:true,chars:[{j:'が',k:'가'},{j:'ぎ',k:'기'},{j:'ぐ',k:'구'},{j:'げ',k:'게'},{j:'ご',k:'고'}]},
+  {r:'탁음 ざ행',taku:true,chars:[{j:'ざ',k:'자'},{j:'じ',k:'지'},{j:'ず',k:'즈'},{j:'ぜ',k:'제'},{j:'ぞ',k:'조'}]},
+  {r:'탁음 だ행',taku:true,chars:[{j:'だ',k:'다'},{j:'ぢ',k:'지'},{j:'づ',k:'즈'},{j:'で',k:'데'},{j:'ど',k:'도'}]},
+  {r:'탁음 ば행',taku:true,chars:[{j:'ば',k:'바'},{j:'び',k:'비'},{j:'ぶ',k:'부'},{j:'べ',k:'베'},{j:'ぼ',k:'보'}]},
+  {r:'반탁음 ぱ행',taku:true,chars:[{j:'ぱ',k:'파'},{j:'ぴ',k:'피'},{j:'ぷ',k:'푸'},{j:'ぺ',k:'페'},{j:'ぽ',k:'포'}]},
+];
+const KR=[
+  {r:'아행',chars:[{j:'ア',k:'아'},{j:'イ',k:'이'},{j:'ウ',k:'우'},{j:'エ',k:'에'},{j:'オ',k:'오'}]},
+  {r:'카행',chars:[{j:'カ',k:'카'},{j:'キ',k:'키'},{j:'ク',k:'쿠'},{j:'ケ',k:'케'},{j:'コ',k:'코'}]},
+  {r:'사행',chars:[{j:'サ',k:'사'},{j:'シ',k:'시'},{j:'ス',k:'스'},{j:'セ',k:'세'},{j:'ソ',k:'소'}]},
+  {r:'타행',chars:[{j:'タ',k:'타'},{j:'チ',k:'치'},{j:'ツ',k:'츠'},{j:'テ',k:'테'},{j:'ト',k:'토'}]},
+  {r:'나행',chars:[{j:'ナ',k:'나'},{j:'ニ',k:'니'},{j:'ヌ',k:'누'},{j:'ネ',k:'네'},{j:'ノ',k:'노'}]},
+  {r:'하행',chars:[{j:'ハ',k:'하'},{j:'ヒ',k:'히'},{j:'フ',k:'후'},{j:'ヘ',k:'헤'},{j:'ホ',k:'호'}]},
+  {r:'마행',chars:[{j:'マ',k:'마'},{j:'ミ',k:'미'},{j:'ム',k:'무'},{j:'メ',k:'메'},{j:'モ',k:'모'}]},
+  {r:'야행',chars:[{j:'ヤ',k:'야'},{j:'ユ',k:'유'},{j:'ヨ',k:'요'}]},
+  {r:'라행',chars:[{j:'ラ',k:'라'},{j:'リ',k:'리'},{j:'ル',k:'루'},{j:'レ',k:'레'},{j:'ロ',k:'로'}]},
+  {r:'와행',chars:[{j:'ワ',k:'와'},{j:'ヲ',k:'오'},{j:'ン',k:'응'}]},
+  {r:'탁음 ガ행',taku:true,chars:[{j:'ガ',k:'가'},{j:'ギ',k:'기'},{j:'グ',k:'구'},{j:'ゲ',k:'게'},{j:'ゴ',k:'고'}]},
+  {r:'탁음 ザ행',taku:true,chars:[{j:'ザ',k:'자'},{j:'ジ',k:'지'},{j:'ズ',k:'즈'},{j:'ゼ',k:'제'},{j:'ゾ',k:'조'}]},
+  {r:'탁음 ダ행',taku:true,chars:[{j:'ダ',k:'다'},{j:'ヂ',k:'지'},{j:'ヅ',k:'즈'},{j:'デ',k:'데'},{j:'ド',k:'도'}]},
+  {r:'탁음 バ행',taku:true,chars:[{j:'バ',k:'바'},{j:'ビ',k:'비'},{j:'ブ',k:'부'},{j:'ベ',k:'베'},{j:'ボ',k:'보'}]},
+  {r:'반탁음 パ행',taku:true,chars:[{j:'パ',k:'파'},{j:'ピ',k:'피'},{j:'プ',k:'푸'},{j:'ペ',k:'페'},{j:'ポ',k:'포'}]},
+];
+const CW={
+  'あ':{w:'あめ',wr:'아메',wm:'비'},'い':{w:'いぬ',wr:'이누',wm:'강아지'},'う':{w:'うみ',wr:'우미',wm:'바다'},
+  'え':{w:'えき',wr:'에키',wm:'역'},'お':{w:'おちゃ',wr:'오챠',wm:'녹차'},
+  'か':{w:'かさ',wr:'카사',wm:'우산'},'き':{w:'きつね',wr:'키츠네',wm:'여우'},'く':{w:'くるま',wr:'쿠루마',wm:'자동차'},
+  'け':{w:'けむり',wr:'케무리',wm:'연기'},'こ':{w:'こども',wr:'코도모',wm:'어린이'},
+  'さ':{w:'さくら',wr:'사쿠라',wm:'벚꽃'},'し':{w:'すし',wr:'스시',wm:'초밥'},'す':{w:'すし',wr:'스시',wm:'초밥'},
+  'せ':{w:'せかい',wr:'세카이',wm:'세계'},'そ':{w:'そら',wr:'소라',wm:'하늘'},
+  'た':{w:'たまご',wr:'타마고',wm:'달걀'},'ち':{w:'ちず',wr:'치즈',wm:'지도'},'つ':{w:'つき',wr:'츠키',wm:'달'},
+  'て':{w:'てがみ',wr:'테가미',wm:'편지'},'と':{w:'とり',wr:'토리',wm:'새'},
+  'な':{w:'なつ',wr:'나츠',wm:'여름'},'に':{w:'にわ',wr:'니와',wm:'정원'},'ぬ':{w:'ぬいぐるみ',wr:'누이구루미',wm:'인형'},
+  'ね':{w:'ねこ',wr:'네코',wm:'고양이'},'の':{w:'のり',wr:'노리',wm:'김'},
+  'は':{w:'はな',wr:'하나',wm:'꽃'},'ひ':{w:'ひかり',wr:'히카리',wm:'빛'},'ふ':{w:'ふゆ',wr:'후유',wm:'겨울'},
+  'へ':{w:'へや',wr:'헤야',wm:'방'},'ほ':{w:'ほし',wr:'호시',wm:'별'},
+  'ま':{w:'まち',wr:'마치',wm:'마을'},'み':{w:'みず',wr:'미즈',wm:'물'},'む':{w:'むし',wr:'무시',wm:'벌레'},
+  'め':{w:'めだか',wr:'메다카',wm:'송사리'},'も':{w:'もり',wr:'모리',wm:'숲'},
+  'や':{w:'やま',wr:'야마',wm:'산'},'ゆ':{w:'ゆき',wr:'유키',wm:'눈(snow)'},'よ':{w:'よる',wr:'요루',wm:'밤'},
+  'ら':{w:'らいねん',wr:'라이넨',wm:'내년'},'り':{w:'りんご',wr:'링고',wm:'사과'},'る':{w:'るすばん',wr:'루스방',wm:'집보기'},
+  'れ':{w:'れんあい',wr:'렌아이',wm:'연애'},'ろ':{w:'ろうそく',wr:'로우소쿠',wm:'촛불'},
+  'わ':{w:'わに',wr:'와니',wm:'악어'},'を':{w:'を',wr:'오',wm:'~을/를 (조사)'},'ん':{w:'みんな',wr:'민나',wm:'모두'},
+  'が':{w:'がっこう',wr:'각코우',wm:'학교'},'ぎ':{w:'ぎんこう',wr:'긴코우',wm:'은행'},'ぐ':{w:'ぐんて',wr:'군테',wm:'장갑'},
+  'げ':{w:'げんき',wr:'겐키',wm:'건강'},'ご':{w:'ごはん',wr:'고항',wm:'밥'},
+  'ざ':{w:'ざっし',wr:'잣시',wm:'잡지'},'じ':{w:'じしん',wr:'지신',wm:'지진'},'ず':{w:'ずつう',wr:'즈츠우',wm:'두통'},
+  'ぜ':{w:'ぜんぶ',wr:'젠부',wm:'전부'},'ぞ':{w:'ぞう',wr:'조우',wm:'코끼리'},
+  'だ':{w:'だいがく',wr:'다이가쿠',wm:'대학'},'ぢ':{w:'はなぢ',wr:'하나지',wm:'코피'},'づ':{w:'つづく',wr:'츠즈쿠',wm:'계속되다'},
+  'で':{w:'でんしゃ',wr:'덴샤',wm:'전철'},'ど':{w:'どうぞ',wr:'도우조',wm:'어서요'},
+  'ば':{w:'ばら',wr:'바라',wm:'장미'},'び':{w:'びょういん',wr:'뵤인',wm:'병원'},'ぶ':{w:'ぶどう',wr:'부도우',wm:'포도'},
+  'べ':{w:'べんとう',wr:'벤토우',wm:'도시락'},'ぼ':{w:'ぼうし',wr:'보우시',wm:'모자'},
+  'ぱ':{w:'ぱん',wr:'팡',wm:'빵'},'ぴ':{w:'ぴあの',wr:'피아노',wm:'피아노'},'ぷ':{w:'ぷーる',wr:'푸루',wm:'수영장'},
+  'ぺ':{w:'ぺんぎん',wr:'펭긴',wm:'펭귄'},'ぽ':{w:'ぽけっと',wr:'포켓토',wm:'주머니'},
+  'ア':{w:'アイス',wr:'아이스',wm:'아이스크림'},'イ':{w:'イチゴ',wr:'이치고',wm:'딸기'},'ウ':{w:'ウサギ',wr:'우사기',wm:'토끼'},
+  'エ':{w:'エレベーター',wr:'에레베-타-',wm:'엘리베이터'},'オ':{w:'オレンジ',wr:'오렌지',wm:'오렌지'},
+  'カ':{w:'カメラ',wr:'카메라',wm:'카메라'},'キ':{w:'キウイ',wr:'키우이',wm:'키위'},'ク':{w:'クッキー',wr:'쿳키-',wm:'쿠키'},
+  'ケ':{w:'ケーキ',wr:'케-키',wm:'케이크'},'コ':{w:'コーヒー',wr:'코-히-',wm:'커피'},
+  'サ':{w:'サラダ',wr:'사라다',wm:'샐러드'},'シ':{w:'シャツ',wr:'샤츠',wm:'셔츠'},'ス':{w:'スマホ',wr:'스마호',wm:'스마트폰'},
+  'セ':{w:'セーター',wr:'세-타-',wm:'스웨터'},'ソ':{w:'ソファ',wr:'소파',wm:'소파'},
+  'タ':{w:'タクシー',wr:'타쿠시-',wm:'택시'},'チ':{w:'チーズ',wr:'치-즈',wm:'치즈'},'ツ':{w:'ツアー',wr:'츠아-',wm:'여행'},
+  'テ':{w:'テレビ',wr:'테레비',wm:'텔레비전'},'ト':{w:'トマト',wr:'토마토',wm:'토마토'},
+  'ナ':{w:'ナイフ',wr:'나이후',wm:'칼'},'ニ':{w:'ニュース',wr:'뉴-스',wm:'뉴스'},'ヌ':{w:'ヌードル',wr:'누-도루',wm:'국수'},
+  'ネ':{w:'ネクタイ',wr:'네쿠타이',wm:'넥타이'},'ノ':{w:'ノート',wr:'노-토',wm:'공책'},
+  'ハ':{w:'ハンバーガー',wr:'함바-가-',wm:'햄버거'},'ヒ':{w:'ヒーター',wr:'히-타-',wm:'히터'},'フ':{w:'フルーツ',wr:'후루-츠',wm:'과일'},
+  'ヘ':{w:'ヘルメット',wr:'헤루멧토',wm:'헬멧'},'ホ':{w:'ホテル',wr:'호테루',wm:'호텔'},
+  'マ':{w:'マスク',wr:'마스쿠',wm:'마스크'},'ミ':{w:'ミルク',wr:'미루쿠',wm:'우유'},'ム':{w:'ムービー',wr:'무-비-',wm:'영화'},
+  'メ':{w:'メニュー',wr:'메뉴-',wm:'메뉴'},'モ':{w:'モデル',wr:'모데루',wm:'모델'},
+  'ヤ':{w:'ヤクルト',wr:'야쿠루토',wm:'야쿠르트'},'ユ':{w:'ユニフォーム',wr:'유니포-무',wm:'유니폼'},'ヨ':{w:'ヨーグルト',wr:'요-구루토',wm:'요거트'},
+  'ラ':{w:'ラーメン',wr:'라-멘',wm:'라멘'},'リ':{w:'リモコン',wr:'리모콘',wm:'리모컨'},'ル':{w:'ルール',wr:'루-루',wm:'규칙'},
+  'レ':{w:'レモン',wr:'레몬',wm:'레몬'},'ロ':{w:'ロボット',wr:'로봇토',wm:'로봇'},
+  'ワ':{w:'ワイン',wr:'와인',wm:'와인'},'ヲ':{w:'ヲ',wr:'오',wm:'~을/를 (조사)'},'ン':{w:'パン',wr:'팡',wm:'빵'},
+  'ガ':{w:'ガス',wr:'가스',wm:'가스'},'ギ':{w:'ギター',wr:'기타-',wm:'기타'},'グ':{w:'グラス',wr:'구라스',wm:'유리컵'},
+  'ゲ':{w:'ゲーム',wr:'게-무',wm:'게임'},'ゴ':{w:'ゴルフ',wr:'고루후',wm:'골프'},
+  'ジ':{w:'ジュース',wr:'쥬-스',wm:'주스'},'ズ':{w:'ズボン',wr:'즈봉',wm:'바지'},'ゼ':{w:'ゼリー',wr:'제리-',wm:'젤리'},
+  'ダ':{w:'ダンス',wr:'단스',wm:'댄스'},'デ':{w:'デート',wr:'데-토',wm:'데이트'},'ド':{w:'ドア',wr:'도아',wm:'문'},
+  'バ':{w:'バナナ',wr:'바나나',wm:'바나나'},'ビ':{w:'ビール',wr:'비-루',wm:'맥주'},'ブ':{w:'ブーツ',wr:'부-츠',wm:'부츠'},
+  'ベ':{w:'ベッド',wr:'벳도',wm:'침대'},'ボ':{w:'ボール',wr:'보-루',wm:'공'},
+  'パ':{w:'パン',wr:'팡',wm:'빵'},'ピ':{w:'ピアノ',wr:'피아노',wm:'피아노'},'プ':{w:'プール',wr:'푸-루',wm:'수영장'},
+  'ペ':{w:'ペン',wr:'펭',wm:'펜'},'ポ':{w:'ポスト',wr:'포스토',wm:'우체통'},
+};
+const HINTS={
+  'て':'て는 "테". で(데)는 탁음!','で':'で는 "데". て(테)에 점 두 개!',
+  'は':'は는 "하". ば(바)탁음, ぱ(파)반탁음','ば':'ば는 "바". は(하)에 점 두 개!','ぱ':'ぱ는 "파". は(하)에 동그라미!',
+  'か':'か는 "카". が(가)는 탁음!','が':'が는 "가". か(카)에 점 두 개!',
+  'テ':'テ는 "테". デ(데)는 탁음!','カ':'カ는 "카". ガ(가)는 탁음!','パ':'パ는 "파". ハ(하)에 동그라미!',
+};
+
+const WORDS=[
+  {jp:'はな',k:'하나',m:'꽃',type:'hira',cat:'nature'},{jp:'やま',k:'야마',m:'산',type:'hira',cat:'nature'},
+  {jp:'うみ',k:'우미',m:'바다',type:'hira',cat:'nature'},{jp:'そら',k:'소라',m:'하늘',type:'hira',cat:'nature'},
+  {jp:'つき',k:'츠키',m:'달',type:'hira',cat:'nature'},{jp:'ゆき',k:'유키',m:'눈(snow)',type:'hira',cat:'nature'},
+  {jp:'あめ',k:'아메',m:'비',type:'hira',cat:'nature'},{jp:'き',k:'키',m:'나무',type:'hira',cat:'nature'},
+  {jp:'すし',k:'스시',m:'초밥',type:'hira',cat:'food'},{jp:'みず',k:'미즈',m:'물',type:'hira',cat:'food'},
+  {jp:'おちゃ',k:'오챠',m:'녹차',type:'hira',cat:'food'},{jp:'たまご',k:'타마고',m:'달걀',type:'hira',cat:'food'},
+  {jp:'りんご',k:'링고',m:'사과',type:'hira',cat:'food'},{jp:'さけ',k:'사케',m:'술/연어',type:'hira',cat:'food'},
+  {jp:'ぶどう',k:'부도우',m:'포도',type:'hira',cat:'food'},{jp:'べんとう',k:'벤토우',m:'도시락',type:'hira',cat:'food'},
+  {jp:'いぬ',k:'이누',m:'강아지',type:'hira',cat:'daily'},{jp:'ねこ',k:'네코',m:'고양이',type:'hira',cat:'daily'},
+  {jp:'ほん',k:'혼',m:'책',type:'hira',cat:'daily'},{jp:'くるま',k:'쿠루마',m:'자동차',type:'hira',cat:'daily'},
+  {jp:'でんしゃ',k:'덴샤',m:'전철',type:'hira',cat:'daily'},{jp:'がっこう',k:'각코우',m:'학교',type:'hira',cat:'daily'},
+  {jp:'コーヒー',k:'코-히-',m:'커피',type:'kata',cat:'food'},{jp:'ジュース',k:'쥬-스',m:'주스',type:'kata',cat:'food'},
+  {jp:'パン',k:'팡',m:'빵',type:'kata',cat:'food'},{jp:'ケーキ',k:'케-키',m:'케이크',type:'kata',cat:'food'},
+  {jp:'アイス',k:'아이스',m:'아이스크림',type:'kata',cat:'food'},{jp:'トマト',k:'토마토',m:'토마토',type:'kata',cat:'food'},
+  {jp:'バナナ',k:'바나나',m:'바나나',type:'kata',cat:'food'},{jp:'ラーメン',k:'라-멘',m:'라멘',type:'kata',cat:'food'},
+  {jp:'テレビ',k:'테레비',m:'텔레비전',type:'kata',cat:'daily'},{jp:'スマホ',k:'스마호',m:'스마트폰',type:'kata',cat:'daily'},
+  {jp:'タクシー',k:'타쿠시-',m:'택시',type:'kata',cat:'daily'},{jp:'ホテル',k:'호테루',m:'호텔',type:'kata',cat:'daily'},
+  {jp:'ノート',k:'노-토',m:'공책',type:'kata',cat:'daily'},{jp:'ドア',k:'도아',m:'문',type:'kata',cat:'daily'},
+  {jp:'サクラ',k:'사쿠라',m:'벚꽃',type:'kata',cat:'nature'},{jp:'レモン',k:'레몬',m:'레몬',type:'kata',cat:'food'},
+];
+
+const charMap={};
+[...HR,...KR].forEach(row=>row.chars.forEach(c=>{charMap[c.j]=c;}));
+let popupState={hira:0,kata:0};
+let currentChar={hira:null,kata:null};
+
+function buildGrid(type){
+  const rows=type==='hira'?HR:KR;
+  const container=document.getElementById(type+'-grid');
+  container.innerHTML='';
+  rows.forEach(row=>{
+    const lbl=document.createElement('div');
+    lbl.className='row-label'+(row.taku?' taku':'');
+    lbl.textContent=row.r;
+    container.appendChild(lbl);
+    const grid=document.createElement('div');grid.className='cgrid';
+    row.chars.forEach(c=>{
+      const card=document.createElement('div');
+      card.className='ccard'+(row.taku?' taku':'');
+      card.innerHTML='<span class="jp">'+c.j+'</span>';
+      card.onclick=(e)=>openPopup(type,c,e);
+      grid.appendChild(card);
+    });
+    container.appendChild(grid);
+  });
+}
+
+function openPopup(type,c,event){
+  currentChar[type]=c;popupState[type]=0;
+  const ol=document.getElementById(type+'-overlay');
+  ol.classList.add('open');
+  renderPopup(type);
+  const popup=ol.querySelector('.popup');
+  const winH=window.innerHeight;
+  const popupH=popup.offsetHeight||360;
+  const touchY=event?(event.changedTouches?event.changedTouches[0].clientY:event.clientY):winH/2;
+  let top=touchY-popupH/2;
+  if(top<16)top=16;
+  if(top+popupH>winH-16)top=winH-popupH-16;
+  popup.style.top=top+'px';
+}
+
+function renderPopup(type){
+  const c=currentChar[type];const s=popupState[type];const p=type==='hira'?'h':'k';
+  document.getElementById(p+'-pjp').textContent=c.j;
+  const korEl=document.getElementById(p+'-pkor');
+  const wordArea=document.getElementById(p+'-pword');
+  const hintEl=document.getElementById(p+'-phint');
+  korEl.style.display=s>=1?'block':'none';
+  if(s>=1)korEl.textContent=c.k;
+  wordArea.style.display=s>=2?'block':'none';
+  if(s>=2){
+    const cw=CW[c.j];
+    if(cw){
+      document.getElementById(p+'-pw').textContent=cw.w;
+      document.getElementById(p+'-pwsub').textContent=cw.wr;
+      document.getElementById(p+'-pwmean').textContent=cw.wm;
+    }
+  }
+  hintEl.textContent=s===0?'터치하면 읽는 법이 보여요':(s===1?(HINTS[c.j]||'한 번 더 터치하면 단어가!'):'닫기를 눌러 다른 글자로');
+  for(let i=0;i<3;i++){
+    const d=document.getElementById((type==='hira'?'hd':'kd')+i);
+    if(d)d.className='pdot'+(i<=s?' on':'');
+  }
+}
+
+function overlayTap(type,event){
+  event.stopPropagation();
+  const s=popupState[type];
+  if(s<2){popupState[type]=s+1;renderPopup(type);}
+}
+function closeOverlay(type){document.getElementById(type+'-overlay').classList.remove('open');}
+
+const wStates={};let wFilter='all';
+function filterW(cat,el){
+  wFilter=cat;
+  document.querySelectorAll('.wfilter button').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');renderWords();
+}
+function renderWords(){
+  const list=WORDS.filter(w=>wFilter==='all'||w.type===wFilter||w.cat===wFilter);
+  const grid=document.getElementById('wgrid');grid.innerHTML='';
+  list.forEach(w=>{
+    const card=document.createElement('div');
+    card.className='wcard'+(wStates[w.jp]?' revealed':'');
+    card.innerHTML='<div class="wjp">'+w.jp+'</div>'
+      +'<div class="wrev" style="display:'+(wStates[w.jp]?'block':'none')+'">'
+      +'<div class="wkor">'+w.k+'</div><div class="wmean">'+w.m+'</div></div>'
+      +'<div class="wtype">'+(w.type==='hira'?'히라가나':'가타카나')+'</div>';
+    card.onclick=()=>{
+      wStates[w.jp]=!wStates[w.jp];
+      card.className='wcard'+(wStates[w.jp]?' revealed':'');
+      card.querySelector('.wrev').style.display=wStates[w.jp]?'block':'none';
+    };
+    grid.appendChild(card);
+  });
+}
+
+let qMode='hira',qOK=0,qTotal=0,qAnswered=false;
+function getAllC(t){return(t==='hira'?HR:KR).flatMap(r=>r.chars);}
+function setQM(m){
+  qMode=m;
+  document.querySelectorAll('.qmode button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('qm-'+m).classList.add('active');
+  qOK=0;qTotal=0;document.getElementById('qscore').textContent='점수: 0 / 0';startQ();
+}
+function qPool(){
+  if(qMode==='hira')return getAllC('hira');
+  if(qMode==='kata')return getAllC('kata');
+  return[...getAllC('hira'),...getAllC('kata')];
+}
+function startQ(){
+  qAnswered=false;
+  document.getElementById('qresult').textContent='';
+  document.getElementById('qnext').style.display='none';
+  const pool=qPool();const correct=pool[Math.floor(Math.random()*pool.length)];
+  document.getElementById('qq').textContent=correct.j;
+  const wrong=pool.filter(c=>c.k!==correct.k);const choices=[correct];
+  while(choices.length<4){const w=wrong[Math.floor(Math.random()*wrong.length)];if(!choices.find(c=>c.k===w.k))choices.push(w);}
+  choices.sort(()=>Math.random()-0.5);
+  const cont=document.getElementById('qchoices');cont.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('button');btn.className='qchoice';
+    btn.textContent=c.k;btn.onclick=()=>checkQ(c.k,correct.k);cont.appendChild(btn);
+  });
+}
+function checkQ(chosen,correct){
+  if(qAnswered)return;qAnswered=true;qTotal++;
+  document.querySelectorAll('.qchoice').forEach(b=>{
+    if(b.textContent===correct)b.classList.add('correct');
+    else if(b.textContent===chosen&&chosen!==correct)b.classList.add('wrong');
+  });
+  const r=document.getElementById('qresult');
+  if(chosen===correct){qOK++;r.textContent='정답! 잘 하셨어요!';r.style.color='#1D9E75';}
+  else{r.textContent='아쉬워요. 정답은 '+correct+' 이에요.';r.style.color='#A32D2D';}
+  document.getElementById('qscore').textContent='점수: '+qOK+' / '+qTotal;
+  document.getElementById('qnext').style.display='block';
+}
+function nextQ(){startQ();}
+function showSec(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');el.classList.add('active');
+  if(id==='quiz')startQ();if(id==='words')renderWords();
+}
+buildGrid('hira');buildGrid('kata');renderWords();startQ();
+</script>
+</body>
+</html>
