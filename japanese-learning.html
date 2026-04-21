@@ -28,9 +28,9 @@ h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8p
 
 /* 오버레이 */
 .overlay-wrap{position:relative;}
-.overlay{display:none;position:absolute;inset:0;z-index:50;background:rgba(0,0,0,0.45);align-items:flex-start;justify-content:center;padding-top:20px;min-height:300px;}
-.overlay.open{display:flex;}
-.popup{background:white;border-radius:20px;width:88%;max-width:320px;text-align:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);}
+.overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.45);}
+.overlay.open{display:block;}
+.popup{background:white;border-radius:20px;width:88%;max-width:320px;text-align:center;overflow:hidden;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.15);position:absolute;left:50%;transform:translateX(-50%);}
 .popup-jp{font-size:100px;line-height:1.05;color:#1a1a1a;padding:24px 16px 8px;}
 .popup-kor{font-size:36px;font-weight:500;color:#0F6E56;padding:0 16px 10px;display:none;}
 .popup-word-area{display:none;padding:0 20px 16px;}
@@ -89,7 +89,7 @@ h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8p
     <p class="sec-hint">터치 → 발음 → 단어</p>
     <div class="prog-bg"><div class="prog-bar" id="hprog" style="width:0%"></div></div>
     <div class="overlay-wrap" id="hira-wrap">
-      <div class="overlay" id="hira-overlay" onclick="overlayTap('hira',event)">
+      <div class="overlay" id="hira-overlay" onclick="if(event.target===this)closeOverlay('hira')">
         <div class="popup" onclick="overlayTap('hira',event)">
           <div class="popup-jp" id="h-pjp"></div>
           <div class="popup-kor" id="h-pkor"></div>
@@ -112,7 +112,7 @@ h1{font-size:18px;font-weight:500;color:#1a1a1a;margin-bottom:4px;padding-top:8p
     <p class="sec-hint">터치 → 발음 → 단어</p>
     <div class="prog-bg"><div class="prog-bar" id="kprog" style="width:0%"></div></div>
     <div class="overlay-wrap" id="kata-wrap">
-      <div class="overlay" id="kata-overlay" onclick="overlayTap('kata',event)">
+      <div class="overlay" id="kata-overlay" onclick="if(event.target===this)closeOverlay('kata')">
         <div class="popup" onclick="overlayTap('kata',event)">
           <div class="popup-jp" id="k-pjp"></div>
           <div class="popup-kor" id="k-pkor"></div>
@@ -298,19 +298,36 @@ function buildGrid(type){
       const card=document.createElement('div');
       card.className='ccard'+(row.taku?' taku':'');
       card.innerHTML='<span class="jp">'+c.j+'</span>';
-      card.onclick=()=>openPopup(type,c);
+      card.onclick=(e)=>openPopup(type,c,e);
       grid.appendChild(card);
     });
     container.appendChild(grid);
   });
 }
 
-function openPopup(type,c){
-  currentChar[type]=c;popupState[type]=0;renderPopup(type);
-  const wrap=document.getElementById(type+'-wrap');
+function speak(text){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const utter=new SpeechSynthesisUtterance(text);
+  utter.lang='ja-JP';
+  utter.rate=0.85;
+  window.speechSynthesis.speak(utter);
+}
+
+function openPopup(type,c,event){
+  currentChar[type]=c;popupState[type]=0;
   const ol=document.getElementById(type+'-overlay');
-  ol.style.minHeight=Math.max(wrap.scrollHeight,320)+'px';
   ol.classList.add('open');
+  renderPopup(type);
+  const popup=ol.querySelector('.popup');
+  const winH=window.innerHeight;
+  const popupH=popup.offsetHeight||360;
+  const touchY=event?(event.changedTouches?event.changedTouches[0].clientY:event.clientY):winH/2;
+  let top=touchY-popupH/2;
+  if(top<16)top=16;
+  if(top+popupH>winH-16)top=winH-popupH-16;
+  popup.style.top=top+'px';
+  speak(c.j);
 }
 
 function renderPopup(type){
@@ -328,6 +345,7 @@ function renderPopup(type){
       document.getElementById(p+'-pw').textContent=cw.w;
       document.getElementById(p+'-pwsub').textContent=cw.wr;
       document.getElementById(p+'-pwmean').textContent=cw.wm;
+      speak(cw.w);
     }
   }
   hintEl.textContent=s===0?'터치하면 읽는 법이 보여요':(s===1?(HINTS[c.j]||'한 번 더 터치하면 단어가!'):'닫기를 눌러 다른 글자로');
